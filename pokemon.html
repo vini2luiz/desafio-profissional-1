@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Details</title>
+</head>
+<body>
+    <div id="pokemonList"></div>
+
+    <script>
+        async function getPoke() {        
+            try {
+                const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151');
+                const data = await response.json();
+                return data.results;
+            } catch (error) {
+                console.error('Erro ao obter lista de Pokémon:', error);
+                return [];
+            }
+        }
+
+        async function getPokemonDetails(pokemon) {
+            try {
+                const response = await fetch('https://pokeapi.co/api/v2/pokemon/' + pokemon.name);
+                const pokemonWithManyDetails = await response.json();
+                const pokemonDetailed = {
+                    nome: pokemonWithManyDetails.name,
+                    altura: pokemonWithManyDetails.height,
+                    peso: pokemonWithManyDetails.weight,
+                    tipos: pokemonWithManyDetails.types.map(type => type.type.name),
+                    numero: pokemonWithManyDetails.id,
+                    imagem: pokemonWithManyDetails.sprites.front_default
+                };
+                return pokemonDetailed;
+            } catch (error) {
+                console.error('Erro ao obter detalhes do Pokémon:', error);
+                return null;
+            }
+        }
+
+        window.onload = async function () {
+            const pokemons = await getPoke();
+            const pokemonDetailsPromises = pokemons.map(pokemon => getPokemonDetails(pokemon));
+            const pokemonDetails = await Promise.all(pokemonDetailsPromises);
+
+            const pokemonListElement = document.getElementById('pokemonList');
+            pokemonDetails.forEach(pokemon => {
+                if (pokemon) {
+                    const pokemonCard = document.createElement('div');
+                    pokemonCard.innerHTML = `
+                        <img src="${pokemon.imagem}" alt="${pokemon.nome}">
+                        <h3>${pokemon.nome}</h3>
+                        <p>Número: ${pokemon.numero}</p>
+                        <p>Altura: ${pokemon.altura}</p>
+                        <p>Peso: ${pokemon.peso}</p>
+                        <p>Tipos: ${pokemon.tipos.join(', ')}</p>
+                    `;
+                    pokemonListElement.appendChild(pokemonCard);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
